@@ -40,6 +40,9 @@ type Data struct {
 	// jsonBody holds the original body of the request.
 	// Only available for json requests.
 	jsonBody []byte
+	// xmlBody holds the original body of the request
+	// Only available for xml requests
+	xmlBody []byte
 }
 
 func newData() *Data {
@@ -88,6 +91,13 @@ func ParseMax(req *http.Request, max int64) (*Data, error) {
 		if err := parseJSON(data.Values, data.jsonBody); err != nil {
 			return nil, err
 		}
+	} else if strings.Contains(contentType, "application/xml") {
+		body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			return nil, err
+		}
+		data.xmlBody = body
+		data.Add("data", string(body))
 	}
 	for key, vals := range req.URL.Query() {
 		for _, val := range vals {
@@ -204,6 +214,10 @@ func (d Data) KeyExists(key string) bool {
 func (d Data) FileExists(key string) bool {
 	_, found := d.Files[key]
 	return found
+}
+
+func (d Data) GetXML() []byte {
+	return d.xmlBody
 }
 
 // GetInt returns the first element in data[key] converted to an int.
