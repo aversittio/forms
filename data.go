@@ -30,6 +30,8 @@ type Data struct {
 	// urlencoded form, and the form fields only (not
 	// files) from a multipart form
 	Values url.Values
+	// UrlParams holds query params from query string
+	QueryParams url.Values
 	// Files holds files from a multipart form only.
 	// For any other type of request, it will always
 	// be empty. Files only supports one file per key,
@@ -47,8 +49,9 @@ type Data struct {
 
 func newData() *Data {
 	return &Data{
-		Values: url.Values{},
-		Files:  map[string]*multipart.FileHeader{},
+		Values:      url.Values{},
+		QueryParams: url.Values{},
+		Files:       map[string]*multipart.FileHeader{},
 	}
 }
 
@@ -101,7 +104,7 @@ func ParseMax(req *http.Request, max int64) (*Data, error) {
 	}
 	for key, vals := range req.URL.Query() {
 		for _, val := range vals {
-			data.Add(key, val)
+			data.AddQueryParam(key, val)
 		}
 	}
 	return data, nil
@@ -158,6 +161,10 @@ func (d *Data) Add(key string, value string) {
 	d.Values.Add(key, value)
 }
 
+func (d *Data) AddQueryParam(key string, value string) {
+	d.QueryParams.Add(key, value)
+}
+
 // AddFile adds the multipart form file to data with the given key.
 func (d *Data) AddFile(key string, file *multipart.FileHeader) {
 	d.Files[key] = file
@@ -166,6 +173,11 @@ func (d *Data) AddFile(key string, file *multipart.FileHeader) {
 // Del deletes the values associated with key.
 func (d *Data) Del(key string) {
 	d.Values.Del(key)
+}
+
+// Del deletes the values associated with key.
+func (d *Data) DelQueryParam(key string) {
+	d.QueryParams.Del(key)
 }
 
 // DelFile deletes the file associated with key (if any).
@@ -188,6 +200,10 @@ func (d Data) Get(key string) string {
 	return d.Values.Get(key)
 }
 
+func (d Data) GetQueryParam(key string) string {
+	return d.QueryParams.Get(key)
+}
+
 // GetFile returns the multipart form file associated with key, if any, as a *multipart.FileHeader.
 // If there is no file associated with key, it returns nil. If you just want the body of the
 // file, use GetFileBytes.
@@ -200,11 +216,21 @@ func (d *Data) Set(key string, value string) {
 	d.Values.Set(key, value)
 }
 
+// Set sets the key to value. It replaces any existing values.
+func (d *Data) SetQueryParam(key string, value string) {
+	d.QueryParams.Set(key, value)
+}
+
 // KeyExists returns true iff data.Values[key] exists. When parsing a request body, the key
 // is considered to be in existence if it was provided in the request body, even if its value
 // is empty.
 func (d Data) KeyExists(key string) bool {
 	_, found := d.Values[key]
+	return found
+}
+
+func (d Data) QueryParamExists(key string) bool {
+	_, found := d.QueryParams[key]
 	return found
 }
 
