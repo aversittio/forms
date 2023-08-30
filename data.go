@@ -246,6 +246,10 @@ func (d Data) GetXML() []byte {
 	return d.xmlBody
 }
 
+func (d Data) GetJson() []byte {
+	return d.jsonBody
+}
+
 // GetInt returns the first element in data[key] converted to an int.
 func (d Data) GetInt(key string) int {
 	if !d.KeyExists(key) || len(d.Values[key]) == 0 {
