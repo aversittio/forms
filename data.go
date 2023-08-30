@@ -31,7 +31,7 @@ type Data struct {
 	// files) from a multipart form
 	Values url.Values
 	// UrlParams holds query params from query string
-	QueryParams url.Values
+	QueryParams map[string]string
 	// Files holds files from a multipart form only.
 	// For any other type of request, it will always
 	// be empty. Files only supports one file per key,
@@ -50,7 +50,7 @@ type Data struct {
 func newData() *Data {
 	return &Data{
 		Values:      url.Values{},
-		QueryParams: url.Values{},
+		QueryParams: map[string]string{},
 		Files:       map[string]*multipart.FileHeader{},
 	}
 }
@@ -162,7 +162,7 @@ func (d *Data) Add(key string, value string) {
 }
 
 func (d *Data) AddQueryParam(key string, value string) {
-	d.QueryParams.Add(key, value)
+	d.QueryParams[key] = value
 }
 
 // AddFile adds the multipart form file to data with the given key.
@@ -177,7 +177,7 @@ func (d *Data) Del(key string) {
 
 // Del deletes the values associated with key.
 func (d *Data) DelQueryParam(key string) {
-	d.QueryParams.Del(key)
+	delete(d.QueryParams, key)
 }
 
 // DelFile deletes the file associated with key (if any).
@@ -201,7 +201,7 @@ func (d Data) Get(key string) string {
 }
 
 func (d Data) GetQueryParam(key string) string {
-	return d.QueryParams.Get(key)
+	return d.QueryParams[key]
 }
 
 // GetFile returns the multipart form file associated with key, if any, as a *multipart.FileHeader.
@@ -218,7 +218,7 @@ func (d *Data) Set(key string, value string) {
 
 // Set sets the key to value. It replaces any existing values.
 func (d *Data) SetQueryParam(key string, value string) {
-	d.QueryParams.Set(key, value)
+	d.QueryParams[key] = value
 }
 
 // KeyExists returns true iff data.Values[key] exists. When parsing a request body, the key
